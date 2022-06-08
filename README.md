@@ -8,7 +8,6 @@ To execute the code run:
 
 ```
 $ python3 stairwayToRainbow.py
-
 ```
 
 
@@ -22,7 +21,8 @@ As it is the code generates stepped rainbow tables with following parameters :
 	- nhashingnodes =5
 
  
-and performs nbAttack = 1000.
+and performs 
+	- nbAttack = 1000.
 
 These parameters allow to test the implementation quickly on a personal laptop.
 
