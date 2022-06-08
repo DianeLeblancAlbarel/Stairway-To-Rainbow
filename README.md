@@ -16,15 +16,15 @@ As it is the code generates stepped rainbow tables with following parameters :
 
 	- N = 2**24
 	- t = 1000
-	- steps positions= [750,800,850,900,950]
+	- steps positions = [750,800,850,900,950]
 	- alpha = 0.95333
 	- l = 2
-	- nhashingnodes =5
+	- nhashingnodes = 5
 
  
 and performs :
 
-	- nbAttack = 1000.
+	- nbAttack = 1000
 
 These parameters allow to test the implementation quickly on a personal laptop.
 
