@@ -21,7 +21,8 @@ As it is the code generates stepped rainbow tables with following parameters :
 	- nhashingnodes =5
 
  
-and performs 
+and performs :
+
 	- nbAttack = 1000.
 
 These parameters allow to test the implementation quickly on a personal laptop.
