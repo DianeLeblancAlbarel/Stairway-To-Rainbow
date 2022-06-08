@@ -7,6 +7,7 @@ Dependencies:
 To execute the code run:
 
 ```
+$ make
 $ python3 stairwayToRainbow.py
 ```
 
