@@ -59,7 +59,6 @@ void *sorting_thread(void *args) {
 		current_tasks[thread_id]=3;
 		gettimeofday(&begin, 0);
 		thr_index = *(st_args->threshold);
-		//printf("########%lld,%lld,%lld,%lld#########\n",thr_index,nbBucket,final_size,m);
 		if ((thr_index >0)&&(thr_index!=old_thr_index)) {
 			sorting(st_args->points,old_thr_index,thr_index,nbBucket,st_args->h_table,&final_size);
 			old_thr_index = thr_index;
@@ -104,7 +103,6 @@ void *scale_sorting_thread(void *args) {
 		current_tasks[thread_id]=3;
 		gettimeofday(&begin, 0);
 		thr_index = *(st_args->threshold);
-		//printf("########%lld,%lld,%lld,%lld#########\n",thr_index,nbBucket,final_size,m);
 		if ((thr_index >0)&&(thr_index!=old_thr_index)) {
 			scale_sorting(st_args->points,old_thr_index,thr_index,nbBucket,st_args->h_table,&final_size,st_args->nb_waste,st_args->waste_table,st_args->waste_size,st_args->filter_i,st_args->scale_sorting_filter);
 			old_thr_index = thr_index;
@@ -137,7 +135,7 @@ void master_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 	gettimeofday(&beginInit,0);
 	current_tasks[node_id]=2;
 	int i = 0, endcomput=0,scale_mod=0;
-	double thread_initialisation = 0, waitTime=0,sendTime=0,g,firstSend=0,stime=0,sortTime=0,clean=0,convert=0,initTime=0;
+	double thread_initialisation = 0, waitTime=0,sendTime=0,g,stime=0,sortTime=0,clean=0,convert=0,initTime=0;
 	double * sleepTime = calloc(numberFilter+1,sizeof(double));
 	double *sortingTime = calloc(numberFilter+1,sizeof(double));
 	int node=0, t, recv_chunk_size;
@@ -164,7 +162,6 @@ void master_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 	choose_start_pts(points,mcol);	
 	t = 0;
 	gettimeofday(&endInit,0);
-	printf("fin init\n");
 
 	do {
 			gettimeofday(&begin,0);
@@ -172,11 +169,7 @@ void master_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 			remainingPoint=0;
 			summi+=mcol;
 			micol+= (get_t_chunk_size(t0,filters,filter_i,filter_count))*mcol;
-			printf("####### %d ########\n",t);
-			printf("micol = %lld\n",micol);
 			mc = mi(t+get_t_chunk_size(t0,filters,filter_i,filter_count),g,N);
-			printf("######MC : %lld\n",mc);
-			printf("1.5MC : %lld\n",(input_t)(1.5*mc));
 			nbB=(input_t)(1.5*mc);
 			h_table = (chain*)malloc(nbB*sizeof(chain));
 			gettimeofday(&beginclean,0);
@@ -184,7 +177,6 @@ void master_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 			clean_table(h_table,(input_t)(1.5*mc));
 			gettimeofday(&endclean,0);
 			clean +=get_time(beginclean,endclean);
-			printf("debut thred...\n");
 			sorting_thread_args *st_args = (sorting_thread_args *) malloc(sizeof(sorting_thread_args));
 			st_args->points = points;
 			st_args->threshold = &recv_index;
@@ -197,7 +189,6 @@ void master_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 			st_args->remainingPoint=&remainingPoint;
 			st_args->sleepTime=&stime;
 			st_args->h_table=h_table;
-			printf("THREAD OK\n");
 
 			// Chunk size (i.e. number of lines in a job) is updated each time m changes
 			chunk_size = chunk_size_job;
@@ -321,20 +312,18 @@ void master_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 					sent_size += chunk_size;
 					gettimeofday(&endSend, 0);
 					sendTime+=get_time(beginSend,endSend);
-					//printf(BLU "####### SENT SIZE : %lld, MCOL : %lld, RECV : %lld, SENT : %lld #####\n" RESET,sent_size,mcol,recv_count,sent_count);
 				}
 				gettimeofday(&endBtwJob,0);
 				*(btwJob+node)+=get_time(beginBtwJob,endBtwJob);
 				current_tasks[node_id]=2;
 			endcomput=1;			
 			}
-			//printf(BLU "####### SENT SIZE : %lld, MCOL : %lld, RECV : %lld, SENT : %lld #####\n" RESET,sent_size,mcol,recv_count,sent_count);
 			gettimeofday(&beginWait, 0);
 			pthread_join(tid, NULL);
 			gettimeofday(&endWait, 0);
 			gettimeofday(&beginconvert,0);
+			scale_points = (scale_chain*)(malloc((input_t)(newNumberm)*sizeof(scale_chain)));
 			if(t+get_t_chunk_size(t0,filters,filter_i,filter_count)>=scale_begining){
-				scale_points = (scale_chain*)(malloc((input_t)(newNumberm)*sizeof(scale_chain)));
 				chain_table_to_scale_chain(h_table,scale_points,(input_t)(1.5*mc));
 			}
 			else
@@ -362,13 +351,10 @@ void master_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 			}
 			
 	}while(t<t0 && scale_mod==0);
-	printf("######### FIN PARTIE 1 ######\n");
 	if(t<t0 && scale_mod==1){
 		gettimeofday(&beginInit,0);
-		printf("ENTRE IF\n");
 		input_t waste_size=compute_waste_table_size(t,N,g,t0,steps,filter_i,filter_count);
 		//waste_size= 100000;
-		printf("WASTE SIZE : %lld\n",waste_size);
 		waste_table = (chain*)malloc(waste_size*sizeof(chain));
 		clean_table(waste_table,waste_size);
 		int nb_waste_column = numberStep;
@@ -382,11 +368,7 @@ void master_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 			remainingPoint=0;
 			summi+=mcol;
 			micol+= (get_t_chunk_size(t0,filters,filter_i,filter_count))*mcol;
-			printf("####### %d ########\n",t);
-			printf("####### %d,%d ########\n",filter_i,filter_count);
-			printf("micol = %lld\n",micol);
 			mc = mi(t+get_t_chunk_size(t0,filters,filter_i,filter_count),g,N);
-			printf("1.5MC : %lld\n",(input_t)(1.5*mc));
 			nbB=(input_t)(1.5*mc);
 			scale_h_table = (scale_chain*)malloc(nbB*sizeof(scale_chain));
 			gettimeofday(&beginclean,0);
@@ -397,7 +379,6 @@ void master_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 			scale_sorting_filter = 1;
 			if (first_second_part ==1)
 				first_second_part = 0;
-			printf("debut thred...\n");
 			scale_sorting_thread_args *scale_st_args = (scale_sorting_thread_args *) malloc(sizeof(scale_sorting_thread_args));
 			scale_st_args->points = scale_points;
 			scale_st_args->threshold = &recv_index;
@@ -415,7 +396,6 @@ void master_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 			scale_st_args->nb_waste=nb_waste;
 			scale_st_args->filter_i=waste_filter;
 			scale_st_args-> scale_sorting_filter=scale_sorting_filter;
-			printf("THREAD OK\n");
 
 			// Chunk size (i.e. number of lines in a job) is updated each time m changes
 			chunk_size = chunk_size_job;
@@ -537,14 +517,12 @@ void master_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 					sent_size += chunk_size;
 					gettimeofday(&endSend, 0);
 					sendTime+=get_time(beginSend,endSend);
-					//printf(BLU "####### SENT SIZE : %lld, MCOL : %lld, RECV : %lld, SENT : %lld #####\n" RESET,sent_size,mcol,recv_count,sent_count);
 				}
 				gettimeofday(&endBtwJob,0);
 				*(btwJob+node)+=get_time(beginBtwJob,endBtwJob);
 				current_tasks[node_id]=2;
 			endcomput=1;			
 			}
-			//printf(BLU "####### SENT SIZE : %lld, MCOL : %lld, RECV : %lld, SENT : %lld #####\n" RESET,sent_size,mcol,recv_count,sent_count);
 			gettimeofday(&beginWait, 0);
 			pthread_join(tid, NULL);
 			gettimeofday(&endWait, 0);
@@ -565,10 +543,6 @@ void master_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 			printf("WASTE TABLE : %lld\n", nb_waste[waste_filter]);
 			/// if the following column is in the list of steps
 			if (t+get_t_chunk_size(t0,filters,filter_i,filter_count)<t0 && (column_in_step_list(steps,t+get_t_chunk_size(t0,filters,filter_i,filter_count),numberStep)==1)){
-				printf("DANS IF\n");
-				printf("case %d\n", waste_filter);
-				printf("%s\n", lines_table_waste_fname[waste_filter]);
-				printf("%s\n", output_table_waste_fname[waste_filter]);
 				fp = fopen(lines_table_waste_fname[waste_filter], "a+");
 	
 					if(fp == NULL)
@@ -581,30 +555,21 @@ void master_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 							fprintf(fp,"%lld\n",nb_waste[waste_filter]);
 						}
 				fclose(fp);
-				printf("DANS IF\n");
 				chain * points = (chain*)malloc(nb_waste[waste_filter]*sizeof(chain));
-				printf("DANS IF malloc\n");
 				table_to_chain(waste_table,points,waste_size);
 				//show_table(points, 0,nb_waste[waste_filter]);
-				printf("DANS IF TABLE\n");
 				save_table_to_file(points,nb_waste[waste_filter],output_table_waste_fname[waste_filter]);
-				printf("SAVE\n");
 				free(points);
 				clean_table(waste_table,waste_size);
 				waste_filter++;
 			}
-			printf("AVANT PLUS\n");
 			t += get_t_chunk_size(t0,filters,filter_i,filter_count);	
 			filter_i++;
 			
 
 			master_status = STATUS_SCALE_NEXT_PART;
-			printf("AVANT FREE\n");
 			free(scale_st_args);
-			printf("ICI\n");
 			if (t>=t0){
-				printf("NB COLUMN :%d\n",nb_waste_column);
-				printf("mcol :%lld\n",mcol);
 				fp = fopen(lines_table_waste_fname[waste_filter], "a+");
 	
 					if(fp == NULL)
@@ -643,7 +608,6 @@ void master_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 	}	
 	else{
 		if (t>=t0){
-				printf("mcol :%lld\n",mcol);
 				fp = fopen(lines_table_fname, "a+");
 	
 					if(fp == NULL)
@@ -656,12 +620,9 @@ void master_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 							fprintf(fp,"%lld\n",mcol);
 						}
 				fclose(fp);
-				// points = (chain*)malloc(nb_waste[waste_filter]*sizeof(chain));
-				// table_to_chain(waste_table,points,waste_size);
 				save_table_to_file(points, mcol, output_table_fname);
 		}
 	}
-	printf("ICI3\n");		
 	gettimeofday(&beginInit,0);
 	totalNumberJob=totalNumberJob/chunk_size;
 	master_status = STATUS_JOB_FINISHED;
@@ -685,7 +646,7 @@ void master_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 
 	printf("node0: saving results to file, m_fin=%lld\n",mcol);
 	gettimeofday(&end_time,0);
-	fp = fopen("records.txt", "a+");
+	fp = fopen("output/logPrecomputation", "a+");
  
     if(fp == NULL)
     {
@@ -697,23 +658,7 @@ void master_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 		fprintf(fp,"Total master : %f\n",get_time(start_time,end_time));
 	}
 	fclose(fp);
-	//save_table_to_file(points, mcol, output_table_fname);
-	// fp = fopen(lines_table_fname, "a+");
- 
-    // if(fp == NULL)
-    // {
-    //     printf("Error opening file\n");
-    //     exit(1);
-    // }
-	// else
-	// {
-	// 	fprintf(fp,"%lld\n",mcol);
-		
-	// }
-	// fclose(fp);
-	writing_logfile (chain_time, hashps, inactive, totalNumberPoint, mcol, waitTime,initTime, node_nb, numberFilter,appel,sortingTime,sleepTime,micol,firstSend,totalNumberJob);
-	//free(points);
-	
+	writing_logfile (chain_time, hashps, inactive, totalNumberPoint, mcol, waitTime,initTime, node_nb, numberFilter,appel,sortingTime,sleepTime,micol,totalNumberJob);	
 	free(appel);
 	free(btwJob);
 
@@ -742,10 +687,8 @@ void slave_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 	*/
 
 	   current_tasks[node_id]=5;
-	   printf("attente reception\n");
        MPI_Recv(&master_status, 1, MPI_CHAR, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &stat);
 		MPI_Recv(&scale_sorting_filter, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &stat);
-	   printf("reception master status\n");
        while (master_status != STATUS_JOB_FINISHED)  {
 		   if(master_status != STATUS_SCALE_NEW_CHUNK && master_status != STATUS_SCALE_NEXT_PART ){
 		//gettimeofday(&beginWait,0);
@@ -764,8 +707,6 @@ void slave_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 			totalWait+=get_time(beginWait,endWait);
 			
 			int column = get_t_chunk_size(t0,filters,filter_i,filter_count);
-			//gettimeofday(&endWait,0);	
-			//totalWait+=get_time(beginWait,endWait);	
 			gettimeofday(&beginComput,0);															     
 			for (i = 0; i < chunk_size; i++) {
 				current_tasks[node_id]=1;
@@ -802,7 +743,6 @@ void slave_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 		}
 		else{
 			//gettimeofday(&beginWait,0);
-			printf("SCALE NODE\n");
 			current_tasks[node_id]=5;                                                                                                                             
 			MPI_Recv(&chunk_size, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &stat);													     
 			if (master_status == STATUS_SCALE_NEXT_PART) {
@@ -818,8 +758,6 @@ void slave_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 			totalWait+=get_time(beginWait,endWait);
 			
 			int column = get_t_chunk_size(t0,filters,filter_i,filter_count);
-			//gettimeofday(&endWait,0);	
-			//totalWait+=get_time(beginWait,endWait);	
 			gettimeofday(&beginComput,0);															     
 			for (i = 0; i < chunk_size; i++) {
 				current_tasks[node_id]=1;
@@ -841,7 +779,6 @@ void slave_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 																			
 			printf("node%d -> node0: sending back results\n", node_id);
 			gettimeofday(&beginSend, 0);
-			//usleep(0.3*chunk_size);
 			MPI_Send(&chunk_size, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
 																			
 			MPI_Send(node_scale_points, chunk_size, MPI_SCALE_POINTS, 0, 0, MPI_COMM_WORLD);
@@ -865,20 +802,13 @@ void slave_loop(MPI_Datatype MPI_POINTS,MPI_Datatype MPI_SCALE_POINTS) {
 	   MPI_Send(&totalPointNumber, 1, MPI_UNSIGNED_LONG_LONG, 0, 0, MPI_COMM_WORLD);
        printf("node%d: total number of chains = %lld\n", node_id, chain_total);
        printf("node%d: hash per second = %f\n", node_id, (double)global_hps/totalComput);
-	   FILE *fp;
-	   fp = fopen("comput.txt","a+");
-	   for(int i=0;i<numberFilter+1;i++)
-			fprintf(fp,"%f,",*(computingTime+i));
-		fprintf(fp,"\n");
-		fclose(fp);
 
 
 }
 
 int main(int argc, char *argv[]) {
 	char * table_name = malloc(50 * sizeof(char));
-	//char * table_waste_name = malloc(50 * sizeof(char));
-	double alpha;
+	double alpha = 1.0;
 	char *alphaname = malloc(50 * sizeof(char));
 	char * alphafile = malloc(50 * sizeof(char));
 	int space;
@@ -888,14 +818,12 @@ int main(int argc, char *argv[]) {
 	tname[0] = 't';
 	wname[0] = 'w';
 	char * table_name2 = malloc(50 * sizeof(char));
-	//char * table_waste_name2 = malloc(50 * sizeof(char));
 	timeval begin,end,beginInit,endInit;
 	gettimeofday(&beginInit,0);
 	double tot = 0;
 	gettimeofday(&begin,0);
 	char opt;
-	signal(SIGUSR1, SignalHandler);
-	//int thread_ids[N_THREADS];
+	//signal(SIGUSR1, SignalHandler);
 	gettimeofday(&timestamp_init,0);
     MPI_Datatype MPI_POINTS;
 	MPI_Datatype MPI_SCALE_POINTS;
@@ -1003,22 +931,6 @@ int main(int argc, char *argv[]) {
 	gettimeofday(&endInit,0);
 	FILE *fp;
 	if (node_id == 0){
-		fp = fopen("records.txt", "a+");
- 
-		if(fp == NULL)
-		{
-			printf("Error opening file\n");
-			exit(1);
-		}
-		else
-		{
-			fprintf(fp,"N : %lld,%f\n",m0,get_time(beginInit,endInit));
-			
-		}
-		fclose(fp);
-		printf("####### BOUCLE DU MAITRE ############\n");
-		printf("APPEL MASTER LOOP\n");
-
 		initialize_name_output_file(numberStep,steps,alphaname,table_name2,table_name,tname,&lines_table_waste_fname,&output_table_waste_fname,first_line_name,first_table_name);
 		master_loop(MPI_POINTS,MPI_SCALE_POINTS);
 		for (int i=0;i<numberStep;i++){
@@ -1027,8 +939,6 @@ int main(int argc, char *argv[]) {
 		}
 		free(lines_table_waste_fname);
 		free(output_table_waste_fname);
-		printf("FIN MASTER\n");
-
 	}
 		
 
@@ -1040,7 +950,7 @@ int main(int argc, char *argv[]) {
 	gettimeofday(&end,0);
 	tot = get_time(begin,end);
 	if(node_id==0){
-	fp = fopen("records.txt", "a+");
+	fp = fopen("output/logPrecomputation.txt", "a+");
  
     if(fp == NULL)
     {
@@ -1049,13 +959,9 @@ int main(int argc, char *argv[]) {
     }
 	else
 	{
-		fprintf(fp,"Total program : %f\n",tot);
+		fprintf(fp,"Total time : %f\n",tot);
 		fclose(fp);
 	}
-	fp = fopen("nodeAppel.txt","a+");
-	fprintf(fp,"##########\n");
-	fclose(fp);
 	}
-	printf("%lld,%lld,%lld\n",mi(800,2*N/m0,N),mi(900,2*N/m0,N),mi(1000,2*N/m0,N));
 	return 0;
 }

@@ -186,7 +186,7 @@ double inactiveTime (double computTime, double sortTime, double sleepTime,int nb
 		return ((sortTime+sleepTime)-computTime)+0.07*nbFilter;
 }
 
-void writing_logfile (double *chain_time, double *hashps, double *inactive,input_t *totalNumberPoint, input_t mcol,double waitTime,double initiTime, int node_nb, int numberFilter, input_t *appel,double *sortingTime, double *sleepTime,input_t micol,double firstSend,input_t totalNumberJob)
+void writing_logfile (double *chain_time, double *hashps, double *inactive,input_t *totalNumberPoint, input_t mcol,double waitTime,double initiTime, int node_nb, int numberFilter, input_t *appel,double *sortingTime, double *sleepTime,input_t micol,input_t totalNumberJob)
 {
 	FILE *fp;
 	int i;
@@ -220,12 +220,10 @@ void writing_logfile (double *chain_time, double *hashps, double *inactive,input
 	meanAppel = meanAppel/(node_nb-1);
 	inactivePSlaves=inactivePSlaves/(double)(node_nb-1);
 	jobps=jobps/(double)(node_nb-1);
-	double jobBtwSend=(firstSend*(node_nb-1)/2)*jobps;
 	comBtwJob = (inactivePSlaves - waitTime)/meanAppel;
 	double meanComp = ((totalNumberJob)/(double)(node_nb-1))*jobps;
 	printf("waitime : %f, meanComp : %f, comBTwJob : %f, initTime : %f\n",waitTime,meanComp,comBtwJob,initiTime);
-	double expTotal = waitTime+meanComp+comBtwJob+initiTime;
-	fp = fopen("records.txt", "a+");
+	fp = fopen("output/logPrecomputation", "a+");
  
     if(fp == NULL)
     {
@@ -234,7 +232,7 @@ void writing_logfile (double *chain_time, double *hashps, double *inactive,input
     }
 	else
 	{
-		fprintf(fp,"mmax : %lld\n%f,%f,%f,%f,%f,%f\n",mcol,expTotal,inactivePSlaves,waitTime,totalSort,totalSleep,maxChainTime);
+		fprintf(fp,"mmax: %lld\nInactive time:%f\nSort time:%f\nHashing time:%f\n",mcol,inactivePSlaves,totalSort,maxChainTime);
 	}
 	fclose(fp);
 }

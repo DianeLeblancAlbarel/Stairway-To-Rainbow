@@ -42,6 +42,6 @@ void load_steps_from_file(char *step_fname, int **step, int *step_count, int t0,
 double get_time(timeval begin, timeval end);
 void print_usage(char *argv[]);
 double inactiveTime (double computTime, double sortTime, double sleepTime,int nbFilter);
-void writing_logfile (double *chain_time, double *hashps, double *inactive,input_t *totalNumberPoint, input_t mcol,double waitTime,double initiTime, int node_nb, int numberFilter, input_t *appel,double *sortingTime, double *sleepTime,input_t micol, double firstSend, input_t totalNumberJob);
+void writing_logfile (double *chain_time, double *hashps, double *inactive,input_t *totalNumberPoint, input_t mcol,double waitTime,double initiTime, int node_nb, int numberFilter, input_t *appel,double *sortingTime, double *sleepTime,input_t micol,input_t totalNumberJob);
 void initialize_name_output_file (int nbStep, int *steps, char * alphaname, char *  table_name2, char *table_name,char * tname,char ***lines_table_waste_fname,char ***output_table_waste_fname, char * first_line_name, char * first_table_name);
 #endif

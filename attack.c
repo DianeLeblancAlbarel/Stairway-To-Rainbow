@@ -138,7 +138,6 @@ void load_steps_column_from_file(char *step_column_fname, int **step_column, int
 	int *step_ptr = malloc(sizeof(int));
 
         if ((f = fopen(step_column_fname, "r")) != NULL) {
-            printf("DANS IF\n");
 		while (fscanf(f, "%d\n", &p) != EOF) {
 			if (p<t0){
 				step_ptr[i] = p;
@@ -156,7 +155,6 @@ void load_steps_column_from_file(char *step_column_fname, int **step_column, int
 		*column_count = 0;
 	}
 	*step_column = step_ptr;
-    printf("nb column: %d\n",*column_count);
     // for (int i = 0;i < *column_count;i++)
     //     printf("%d\n",**(step_column+i));
 
@@ -294,7 +292,7 @@ void save_result_file(input_t succes,char* file, double time, input_t nbHashs,in
     FILE *f1;
 
 	if ( (f = fopen(file, "a+")) != NULL) {
-		fprintf(f, "####\nl : %d\nt : %d\nw : %d\nsuccess : %llu\ncoverage: %f%%\ntime attack : %f\nnb hashs : %lld\nnb false alarm : %lld\nnb in step : %lld\n####\n",ell,t, s,succes,((double)succes/number_attack)*100,time,nbHashs,false_alarm,nb_step);
+		fprintf(f, "####\nl: %d\nt: %d\n\nsuccess: %llu\ncoverage: %f%%\ntime attack: %f\nnb hashs: %lld\nnb false alarm: %lld\n####\n",ell,t,succes,((double)succes/number_attack)*100,time,nbHashs,false_alarm);
 
 
 		fclose(f);
@@ -304,30 +302,6 @@ void save_result_file(input_t succes,char* file, double time, input_t nbHashs,in
 		fprintf(stderr, "Error while opening file %s\n",file);
 		exit(EXIT_FAILURE);
 	}
-    // if ( (f1 = fopen(nbHash, "a+")) != NULL) {
-    //     printf("%d\n",number_attack);
-	// 	fprintf(f1,"%d : %f\n",steps[0],(double)nbHashs/number_attack);
-
-
-	// 	fclose(f1);
-	// }
-
-	// else {
-	// 	fprintf(stderr, "Error while opening file %s\n",file);
-	// 	exit(EXIT_FAILURE);
-	// }
-
-    // if ( (f1 = fopen(probaSuccess, "a+")) != NULL) {
-	// 	fprintf(f1,"%f\n",(double)succes/number_attack);
-
-
-	// 	fclose(f1);
-	// }
-
-	// else {
-	// 	fprintf(stderr, "Error while opening file %s\n",file);
-	// 	exit(EXIT_FAILURE);
-	// }
 
 }
 
@@ -531,22 +505,16 @@ int search (unsigned char * Y, struct chain **table,struct chain ***waste_table,
     unsigned char *hash_x = malloc(HASH_LENGTH);
     for(j=0;j<t;j++){
         c = column_order[j];
-        // printf("c : %d, t : %d\n",c,t);
         for(k=0;k<ell;k++){
             find_step(c + 1,&current_step,steps,&pos_step,numberStep);
             reduction(&x,Y,c,k);
             x1=x;
             fs = 0;
-            // printf("c : %d, FIRST_step : %d\n",c,current_step);
             end_col = current_step;
             previous_col = c + 1;
             end = 0;
-            // if (k == 0)
-                // printf("t : %d INIT : current_step : %d pos_step : %d\n",t, current_step,pos_step);
             while (end == 0){
                 if(current_step == t){
-                    // printf("c : %d, step : %d\n",c,current_step);
-                    // printf("c : %d, current_step : %d, previous col : %d\n",c,current_step,previous_col);
                     ccc (&x,previous_col,current_step,k);
                     *nbHashs+= current_step - previous_col;
                     end = 1;
@@ -558,7 +526,6 @@ int search (unsigned char * Y, struct chain **table,struct chain ***waste_table,
                         *nbHashs+=c+1;
                         if(!memcmp(hash_x, Y, HASH_LENGTH)){
                             *true_alarm+=1;
-                            printf("Find in MAIN\n");
                             return 1;
                         }
                         else
@@ -567,7 +534,6 @@ int search (unsigned char * Y, struct chain **table,struct chain ***waste_table,
                 }
                 else{
                     while (current_step<t && end==0){
-                        // printf("c : %d, step : %d\n",c,current_step);
                         ccc (&x,previous_col,current_step,k);
                         *nbHashs+= current_step - previous_col;
                         if (in_table(x,waste_table[pos_step][k],waste_buckets[pos_step][k],&position)==1){
@@ -580,7 +546,6 @@ int search (unsigned char * Y, struct chain **table,struct chain ***waste_table,
                             if(!memcmp(hash_x, Y, HASH_LENGTH)){
                                 *true_alarm+=1;
                                 *nb_in_step+=1;
-                                printf("Find in steps %d\n",numberStep-pos_step);
                                 return 1;
                             }
                             else{
@@ -770,9 +735,8 @@ int main(int argc, char *argv[]) {
         lignes_waste[i] = malloc(ell*sizeof(input_t));  
     }
     initialize_name_output_file(numberStep,steps,ell,alphaname,table_name2,tname,&waste_lignes_file,&lignes_file,&output_table_waste_fname,&output_table_fname,first_line_name,first_table_name,first_line,first_table);
-    printf("LECTURE 1...\n");
+    printf("READ...\n");
     read_Number_lignes(lignes,lignes_file);
-    printf("LECTURE 2...\n");
         if(classique==0)
         read_Number_waste_lignes(&lignes_waste,waste_lignes_file,numberStep);
     struct chain ** h_table;
@@ -781,7 +745,6 @@ int main(int argc, char *argv[]) {
     input_t **waste_buckets;
     int success = 0;
     inialisation_table(ell,&buckets,&h_table,lambda,lignes,classique,numberStep,&waste_buckets,&waste_h_table,lignes_waste);
-    printf("READ...\n");
     gettimeofday(&begin,0);
     read_table(h_table,lignes,buckets,output_table_fname);
     if (classique==0){
