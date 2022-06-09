@@ -950,7 +950,7 @@ int main(int argc, char *argv[]) {
 	gettimeofday(&end,0);
 	tot = get_time(begin,end);
 	if(node_id==0){
-	fp = fopen("output/logPrecomputation.txt", "a+");
+	fp = fopen("output/logPrecomputation", "a+");
  
     if(fp == NULL)
     {

@@ -28,8 +28,8 @@ and performs :
 
 These parameters allow to test the implementation quickly on a personal laptop.
 
-Tables are saved in datas/ repository, informations about the precomputation phase are saved in the reccord.txt file.
+Tables are saved in datas/ repository, informations about the precomputation phase are saved in the output/logPrecomputation file.
 
-Informations about the attack phase (coverage, time of the attack) are savec in output/ repository.
+Informations about the attack phase (coverage, time of the attack) are savec in output/resultAttack file.
 
 
